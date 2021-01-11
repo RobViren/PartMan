@@ -39,7 +39,6 @@
         "https://www.newegg.com/asus-radeon-rx-6800-xt-tuf-rx6800xt-o16g-gaming/p/N82E16814126476",
         "https://www.newegg.com/sapphire-radeon-rx-6800-xt-11304-01-20g/p/N82E16814202390",
         "https://www.newegg.com/asrock-radeon-rx-6800-xt-rx6800xt-tcx-16go/p/N82E16814930050",
-        "https://www.newegg.com/msi-radeon-rx-6800-xt-rx-6800-xt-16g/p/N82E1681413760",
         "https://www.newegg.com/xfx-radeon-rx-6800-xt-rx-68xtacbd9/p/N82E16814150844",
         "https://www.newegg.com/amd-ryzen-9-5900x/p/N82E16819113664",
         "https://www.newegg.com/amd-ryzen-9-5950x/p/N82E16819113663"
@@ -70,6 +69,8 @@
     ],
     "TEST": [
         "https://www.newegg.com/corsair-16gb-288-pin-ddr4-sdram/p/N82E16820233859",
-        "https://www.microcenter.com/product/481738/gskill-ripjaws-v-16gb-(2-x-8gb)-ddr4-3200-pc4-25600-cl16-dual-channel-desktop-memory-kit-f4-3200c16d-16gvkb---black"
+        "https://www.microcenter.com/product/481738/gskill-ripjaws-v-16gb-(2-x-8gb)-ddr4-3200-pc4-25600-cl16-dual-channel-desktop-memory-kit-f4-3200c16d-16gvkb---black",
+        "https://www.bestbuy.com/site/asus-vg245h-24-fhd-1ms-freesync-console-gaming-monitor-dual-hdmi-vga-black/5591926.p?skuId=5591926",
+        "https://www.evga.com/products/product.aspx?pn=02G-P4-6338-KR"
     ]
 }
