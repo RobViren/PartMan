@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "jsdom": "^16.4.0",
+    "node-fetch": "^2.6.1"
+  },
+  "devDependencies": {
+    "playwright": "^1.7.1"
+  }
+}
