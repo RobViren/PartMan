@@ -1,4 +1,4 @@
-const { webkit, devices } = require('playwright');
+const { chromium, devices } = require('playwright');
 const Discord = require('discord.js');
 const fs = require('fs');
 const { PassThrough } = require('stream');
@@ -8,10 +8,28 @@ const price_regex = /\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})/
 const urls = JSON.parse(fs.readFileSync("urls.json", "utf-8"))
 const part_state = []
 
+const device_names = [
+    "Nexus 5",
+    "Nexus 5X",
+    "Nexus 6P",
+    "Nexus 7",
+    "Pixel 2",
+    "Pixel 2 XL",
+    "iPhone 11 Pro Max",
+    "iPhone 11 Pro",
+    "iPhone 11",
+    "iPhone XR",
+    "iPhone X",
+    "iPhone SE",
+    "iPhone 8 Plus",
+    "iPhone 8"
+]
+
+let request_counter = 0
+
 async function checkNE(url, page) {
     await page.goto(url);
     await page.waitForSelector('.dialog-open')
-    await page.waitForSelector('.price-current')
     const res = await page.evaluate(() => {
         return {
             status: document.querySelector('.dialog-open').innerText,
@@ -31,7 +49,6 @@ async function checkNE(url, page) {
 
 async function checkMC(url, page) {
     await page.goto(url);
-    await page.waitForSelector('.inventoryCnt')
     await page.waitForSelector('#pricing')
     const res = await page.evaluate(() => {
         return {
@@ -166,17 +183,55 @@ function triggerUpdate(url) {
     }
 }
 
-(async () => {
-    const browser = await webkit.launch({
-        headless: true
-    });
-    const context = await browser.newContext({
-        ...devices['iPhone 11'],
-    });
+async function scrollPageToBottom(page, scrollStep = 250, scrollDelay = 100) {
+    const lastPosition = await page.evaluate(
+        async (step, delay) => {
+            const getScrollHeight = (element) => {
+                if (!element) return 0
 
-    // Open new page
-    const page = await context.newPage();
+                const { scrollHeight, offsetHeight, clientHeight } = element
+                return Math.max(scrollHeight, offsetHeight, clientHeight)
+            }
+
+            const position = await new Promise((resolve) => {
+                let count = 0
+                const intervalId = setInterval(() => {
+                    const { body } = document
+                    const availableScrollHeight = getScrollHeight(body)
+
+                    window.scrollBy(0, step)
+                    count += step
+
+                    if (count >= availableScrollHeight) {
+                        clearInterval(intervalId)
+                        resolve(count)
+                    }
+                }, delay)
+            })
+
+            return position
+        },
+        scrollStep,
+        scrollDelay
+    )
+    return lastPosition
+}
+
+async function bulkNE(page) {
+
+}
+
+(async () => {
     while (true) {
+
+        const browser = await chromium.launch({
+            headless: true
+        });
+        const device_name = device_names[Math.floor(Math.random() * device_names.length)]
+        const context = await browser.newContext({
+            ...devices[device_name],
+        });
+        const page = await context.newPage();
         var url = urls[Math.floor(Math.random() * urls.length)];
         var res
 
@@ -194,17 +249,21 @@ function triggerUpdate(url) {
             } else if (url.includes("store.asus.com")) {
                 res = await checkAS(url, page)
             }
-            console.log(new Date(),res)
+            request_counter += 1
+            console.log(request_counter)
             res.url = url
+            res.ts = new Date()
+            if (res.status) {
+                console.log(res)
+            }
             updateParts(res)
             //Slloooowwww Down
         } catch (e) {
             console.log(`Error with ${url}: ${e}`)
         }
-        page.waitForTimeout(10000)
+        await page.close();
+        await context.close();
+        await browser.close();
     }
-    await page.close();
-    await context.close();
-    await browser.close();
     hook.destroy()
 })();
