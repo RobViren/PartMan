@@ -194,9 +194,9 @@ function triggerUpdate(url) {
             } else if (url.includes("store.asus.com")) {
                 res = await checkAS(url, page)
             }
-            console.log(res)
+            console.log(new Date(),res)
             res.url = url
-            updateParts(new Date(),res)
+            updateParts(res)
             //Slloooowwww Down
         } catch (e) {
             console.log(`Error with ${url}: ${e}`)
