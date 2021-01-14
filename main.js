@@ -1,246 +1,210 @@
-const https = require('https')
-const fs = require('fs')
-const fetch = require('node-fetch');
-const jsdom = require("jsdom");
-const { JSDOM } = jsdom;
+const { webkit, devices } = require('playwright');
 const Discord = require('discord.js');
+const fs = require('fs');
+const { PassThrough } = require('stream');
 
-//const hook = new Discord.WebhookClient('798026827549245451', 'Z7sIu660utEK3NiOHwU9pUj30o_j9rZT3FwfPxunS9Gsw05acN2SHtkGZwOpaFG_Zj9o');
 const hook = new Discord.WebhookClient('798215273566961684', '74HAO5JM_-iemuP3V9qOm0KA7ZexM_fVL0UY-kWK-oQFF-oC-NT2Cv0T56RK8jtSaW1a'); //partwatch
-const config = JSON.parse(fs.readFileSync("config.json", "utf-8"))
-const UA = "Mozilla/5.0 (Linux; Android 8.0.0; SM-G930F Build/R16NW; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/74.0.3729.157 Mobile Safari/537.36"
+const price_regex = /\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})/
+const urls = JSON.parse(fs.readFileSync("urls.json", "utf-8"))
 const part_state = []
 
-async function checkBH(url) {
-    let res = await fetch(url, {
-        headers: {
-            "User-Agent": UA
+async function checkNE(url, page) {
+    await page.goto(url);
+    await page.waitForSelector('.dialog-open')
+    await page.waitForSelector('.price-current')
+    const res = await page.evaluate(() => {
+        return {
+            status: document.querySelector('.dialog-open').innerText,
+            price: document.querySelector('.price-current').innerText
         }
-    })
-    let text = await res.text()
-    const dom = new JSDOM(text);
-    console.log(dom.window.document.querySelector("p").textContent)
-    return text.search("Add To Cart</span>")
-}
+    });
 
-async function checkMC(url) {
-    let res = await fetch(url, {
-        headers: {
-            "User-Agent": UA
-        }
-    })
-    let text = await res.text()
-    if (text.search(" in stock</span>") != -1) {
-        return ({
-            url: url,
-            state: "IN STOCK"
-        })
+    //KeyCheck
+    if (res.status == "OUT OF STOCK.") {
+        res.status = false
     } else {
-        return ({
-            url: url,
-            state: "OUT"
-        })
+        res.status = true
     }
+    res.price = parseFloat(price_regex.exec(res.price)[0].replace(',', ""))
+    return (res)
 }
 
-async function checkNE(url) {
-    let res = await fetch(url, {
-        headers: {
-            "User-Agent": UA
+async function checkMC(url, page) {
+    await page.goto(url);
+    await page.waitForSelector('.inventoryCnt')
+    await page.waitForSelector('#pricing')
+    const res = await page.evaluate(() => {
+        return {
+            status: document.querySelector('.inventoryCnt').innerText,
+            price: document.querySelector('#pricing').innerText
         }
-    })
-    let text = await res.text()
-    if (text.search('<strong>OUT OF STOCK.</strong>') == -1) {
-        return ({
-            url: url,
-            state: "IN STOCK"
-        })
+    });
+
+    //KeyCheck
+    if (res.status == "SOLD OUT") {
+        res.status = false
     } else {
-        return ({
-            url: url,
-            state: "OUT"
-        })
+        res.status = true
     }
+    res.price = parseFloat(price_regex.exec(res.price)[0].replace(',', ""))
+    return (res)
 }
 
-async function checkBB(url) {
-    let res = await fetch(url, {
-        headers: {
-            "User-Agent": UA
+async function checkBB(url, page) {
+    await page.goto(url);
+    await page.waitForSelector('.fulfillment-add-to-cart-button')
+    await page.waitForSelector('.priceView-hero-price')
+    const res = await page.evaluate(() => {
+        return {
+            status: document.querySelector('.fulfillment-add-to-cart-button').innerText,
+            price: document.querySelector('.priceView-hero-price').innerText
         }
-    })
-    let text = await res.text()
-    if (text.search('<strong>Sold Out</strong>') == -1) {
-        return ({
-            url: url,
-            state: "IN STOCK"
-        })
+    });
+
+
+    //KeyCheck
+    if (res.status.includes("Sold Out")) {
+        res.status = false
     } else {
-        return ({
-            url: url,
-            state: "OUT"
-        })
+        res.status = true
     }
+    res.price = parseFloat(price_regex.exec(res.price)[0].replace(',', ""))
+    return (res)
 }
 
-async function checkEV(url) {
-    let res = await fetch(url, {
-        headers: {
-            "User-Agent": UA
-        }
-    })
-    let text = await res.text()
-    if (text.search('</i>Out of Stock') == -1) {
-        return ({
-            url: url,
-            state: "IN STOCK"
-        })
-    } else {
-        return ({
-            url: url,
-            state: "OUT"
-        })
-    }
-}
+async function checkEV(url, page) {
+    await page.goto(url);
+    await page.waitForSelector(".product-top")
 
-async function checkAS(url) {
-    let res = await fetch(url, {
-        headers: {
-            "User-Agent": UA
-        }
-    })
-    let text = await res.text()
-    if (text.search('"saleqty":0') == -1) {
-        return ({
-            url: url,
-            state: "IN STOCK"
-        })
-    } else {
-        return ({
-            url: url,
-            state: "OUT"
-        })
-    }
-}
+    const res = await page.evaluate(() => {
 
-function checkAll() {
-    (async () => {
-        console.log(new Date()," Checking Again...")
-        let futs = []
-        let tests = []
-        // config.BH.forEach(url => {
-        //     futs.push(checkBH(url))
-        // })
-        config.MC.forEach(url => {
-            futs.push(checkMC(url))
-        })
-        config.NE.forEach(url => {
-            futs.push(checkNE(url))
-        })
-        config.BB.forEach(url => {
-            futs.push(checkBB(url))
-        })
-        config.EV.forEach(url => {
-            futs.push(checkEV(url))
-        })
-        config.AS.forEach(url => { 
-            futs.push(checkAS(url))
-        })  
-
-        //Confirm I can read
-        tests.push(checkNE(config.TEST[0]))
-        tests.push(checkMC(config.TEST[1]))
-        tests.push(checkBB(config.TEST[2]))
-        tests.push(checkEV(config.TEST[3]))
-        tests.push(checkEV(config.TEST[4]))
-
-        const res = await Promise.all(futs)
-        const tres = await Promise.all(tests)
-
-        let needs_update = false
-        let out_of_stock = []
-
-        res.forEach(part => {
-            let stock_change = stockUpdate(part)
-            if (stock_change == "NO CHANGE") {
-                //Do nothing
-            } else if (stock_change == "IN STOCK") {
-                //Send Message
-                needs_update = true
-            } else {
-                //Something is out of stock
-                needs_update = true
-                out_of_stock.push(stock_change)
+        if (document.querySelector('#LFrame_pnlOutOfStock')) {
+            return {
+                status: false,
+                price: document.querySelector("#LFrame_spanFinalPrice").innerText
             }
-        })
-
-        if (needs_update) {
-            let out_str = ""
-            //In stock message
-            if (part_state.length > 0) {
-                out_str = "Parts someone looking for found!\n"
-                part_state.forEach(part => {
-                    out_str += `${part}\n`
-                })
+        } else {
+            return {
+                status: true,
+                price: document.querySelector("#LFrame_spanFinalPrice").innerText
             }
+        }
+    });
 
-            //Out of stock message
-            if (out_of_stock.length > 0) {
-                out_str += "\nSome items are now out of stock :( \n"
-                out_of_stock.forEach(part => {
-                    out_str += `${part}\n`
-                })
-            }
-            console.log(out_str)
-            hook.send(out_str)
-        }
-
-        if (tres[0].url !== config.TEST[0]) {
-            console.log("New Egg Issue")
-        }
-        if (tres[1].url !== config.TEST[1]) {
-            console.log("MicroCenter Issue")
-        }
-        if (tres[2].url !== config.TEST[2]) {
-            console.log("BestBuy Issue")
-        }
-        if (tres[3].url !== config.TEST[3]) {
-            console.log("EV Issue")
-        }
-        if (tres[4].url !== config.TEST[4]) {
-            console.log("Asus Issue")
-        }
-    })();
+    res.price = parseFloat(price_regex.exec(res.price)[0].replace(',', ""))
+    return (res)
 }
 
-//True if stock updated
-function stockUpdate(new_part) {
-    //Check to see if we need to remove a part or add one
+async function checkAS(url, page) {
+    await page.goto(url);
+    const res = await page.evaluate(() => {
+        return {
+            status: document.querySelector('#off_sale').innerText,
+            price: document.querySelector('.price').innerText
+        }
+    });
+
+    //KeyCheck
+    if (res.status.includes("Sold Out")) {
+        res.status = false
+    } else {
+        res.status = true
+    }
+    res.price = parseFloat(price_regex.exec(res.price)[0].replace(',', ""))
+    return (res)
+}
+
+async function checkBH(url, page) {
+    await page.goto(url);
+    await page.waitForSelector('.user-interaction')
+
+    const res = await page.evaluate(() => {
+        return {
+            status: document.querySelector('.user-interaction').innerText,
+            price: document.querySelector('.price-container').textContent
+        }
+    });
+
+    //KeyCheck
+    if (res.status.includes("Notify When In Stock")) {
+        res.status = false
+    } else {
+        res.status = true
+    }
+    res.price = parseFloat(price_regex.exec(res.price)[0].replace(',', ""))
+    return (res)
+}
+
+function updateParts(new_part) {
+    //Remove if it is in the list but 
+    var part_change = { change: false }
     for (let i = 0; i < part_state.length; i++) {
-        if (part_state[i] == new_part.url) {
-            if (new_part.state == "OUT") {
-                const index = part_state.indexOf(new_part.url);
-                part_state.splice(index, 1);
-                return new_part.url
-            } else {
-                return "NO CHANGE"
+        if (part_state[i].url == new_part.url) {
+            if (!new_part.status) {
+                part_state.splice(i, 1)
+                triggerUpdate(new_part.url)
             }
         }
     }
-    //Add parts that are not in the list
-    if (new_part.state == "OUT") {
-        return "NO CHANGE"
-    } else {
-        part_state.push(new_part.url)
-        return "IN STOCK"
+
+    if (new_part.status) {
+        part_state.push(new_part)
+        triggerUpdate()
     }
 }
 
-checkAll()
-setInterval(checkAll, 60000)
+function triggerUpdate(url) {
+    if (url) {
+        hook.send(`${url} is now out of stock :(`)
+    } else {
+        let out_str = ""
+        out_str = "Parts someone looking for found!\n"
+        part_state.forEach(part => {
+            out_str += `${part.url} for **$${part.price}**\n`
+        })
+        hook.send(out_str)
+    }
+}
 
+(async () => {
+    const browser = await webkit.launch({
+        headless: true
+    });
+    const context = await browser.newContext({
+        ...devices['iPhone 11'],
+    });
 
-// checkAS("https://store.asus.com/us/item/202009AM150000004").then(res => {
-//     console.log(res)
-// })
-//hook.destroy()
+    // Open new page
+    const page = await context.newPage();
+    while (true) {
+        var url = urls[Math.floor(Math.random() * urls.length)];
+        var res
+
+        try {
+            if (url.includes("www.bhphotovideo.com")) {
+                res = await checkBH(url, page)
+            } else if (url.includes("www.microcenter.com")) {
+                res = await checkMC(url, page)
+            } else if (url.includes("www.newegg.com")) {
+                res = await checkNE(url, page)
+            } else if (url.includes("www.bestbuy.com")) {
+                res = await checkBB(url, page)
+            } else if (url.includes("www.evga.com")) {
+                res = await checkEV(url, page)
+            } else if (url.includes("store.asus.com")) {
+                res = await checkAS(url, page)
+            }
+            console.log(res)
+            res.url = url
+            updateParts(new Date(),res)
+            //Slloooowwww Down
+        } catch (e) {
+            console.log(`Error with ${url}: ${e}`)
+        }
+        page.waitForTimeout(10000)
+    }
+    await page.close();
+    await context.close();
+    await browser.close();
+    hook.destroy()
+})();
