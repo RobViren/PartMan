@@ -1,9 +1,9 @@
-const { chromium, devices } = require('playwright');
-const Discord = require('discord.js');
-const fs = require('fs');
-const { PassThrough } = require('stream');
+const { chromium, devices } = require('playwright')
+const Discord = require('discord.js')
+const fs = require('fs')
+const { PassThrough } = require('stream')
 
-const hook = new Discord.WebhookClient('798215273566961684', '74HAO5JM_-iemuP3V9qOm0KA7ZexM_fVL0UY-kWK-oQFF-oC-NT2Cv0T56RK8jtSaW1a'); //partwatch
+const hook = new Discord.WebhookClient('798215273566961684', '74HAO5JM_-iemuP3V9qOm0KA7ZexM_fVL0UY-kWK-oQFF-oC-NT2Cv0T56RK8jtSaW1a') //partwatch
 const price_regex = /\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})/
 const urls = JSON.parse(fs.readFileSync("urls.json", "utf-8"))
 const part_state = []
@@ -28,14 +28,14 @@ const device_names = [
 let request_counter = 0
 
 async function checkNE(url, page) {
-    await page.goto(url);
+    await page.goto(url)
     await page.waitForSelector('.dialog-open')
     const res = await page.evaluate(() => {
         return {
             status: document.querySelector('.dialog-open').innerText,
             price: document.querySelector('.price-current').innerText
         }
-    });
+    })
 
     //KeyCheck
     if (res.status == "OUT OF STOCK.") {
@@ -48,14 +48,14 @@ async function checkNE(url, page) {
 }
 
 async function checkMC(url, page) {
-    await page.goto(url);
+    await page.goto(url)
     await page.waitForSelector('#pricing')
     const res = await page.evaluate(() => {
         return {
             status: document.querySelector('.inventoryCnt').innerText,
             price: document.querySelector('#pricing').innerText
         }
-    });
+    })
 
     //KeyCheck
     if (res.status == "SOLD OUT") {
@@ -68,7 +68,7 @@ async function checkMC(url, page) {
 }
 
 async function checkBB(url, page) {
-    await page.goto(url);
+    await page.goto(url)
     await page.waitForSelector('.fulfillment-add-to-cart-button')
     await page.waitForSelector('.priceView-hero-price')
     const res = await page.evaluate(() => {
@@ -76,7 +76,7 @@ async function checkBB(url, page) {
             status: document.querySelector('.fulfillment-add-to-cart-button').innerText,
             price: document.querySelector('.priceView-hero-price').innerText
         }
-    });
+    })
 
 
     //KeyCheck
@@ -90,7 +90,7 @@ async function checkBB(url, page) {
 }
 
 async function checkEV(url, page) {
-    await page.goto(url);
+    await page.goto(url)
     await page.waitForSelector(".product-top")
 
     const res = await page.evaluate(() => {
@@ -106,20 +106,20 @@ async function checkEV(url, page) {
                 price: document.querySelector("#LFrame_spanFinalPrice").innerText
             }
         }
-    });
+    })
 
     res.price = parseFloat(price_regex.exec(res.price)[0].replace(',', ""))
     return (res)
 }
 
 async function checkAS(url, page) {
-    await page.goto(url);
+    await page.goto(url)
     const res = await page.evaluate(() => {
         return {
             status: document.querySelector('#off_sale').innerText,
             price: document.querySelector('.price').innerText
         }
-    });
+    })
 
     //KeyCheck
     if (res.status.includes("Sold Out")) {
@@ -132,7 +132,7 @@ async function checkAS(url, page) {
 }
 
 async function checkBH(url, page) {
-    await page.goto(url);
+    await page.goto(url)
     await page.waitForSelector('.user-interaction')
 
     const res = await page.evaluate(() => {
@@ -140,7 +140,7 @@ async function checkBH(url, page) {
             status: document.querySelector('.user-interaction').innerText,
             price: document.querySelector('.price-container').textContent
         }
-    });
+    })
 
     //KeyCheck
     if (res.status.includes("Notify When In Stock")) {
@@ -155,7 +155,7 @@ async function checkBH(url, page) {
 function updateParts(new_part) {
     //Remove if it is in the list but 
     var part_change = { change: false }
-    for (let i = 0; i < part_state.length; i++) {
+    for (let i = 0 i < part_state.length i++) {
         if (part_state[i].url == new_part.url) {
             if (!new_part.status) {
                 part_state.splice(i, 1)
@@ -183,56 +183,20 @@ function triggerUpdate(url) {
     }
 }
 
-async function scrollPageToBottom(page, scrollStep = 250, scrollDelay = 100) {
-    const lastPosition = await page.evaluate(
-        async (step, delay) => {
-            const getScrollHeight = (element) => {
-                if (!element) return 0
 
-                const { scrollHeight, offsetHeight, clientHeight } = element
-                return Math.max(scrollHeight, offsetHeight, clientHeight)
-            }
-
-            const position = await new Promise((resolve) => {
-                let count = 0
-                const intervalId = setInterval(() => {
-                    const { body } = document
-                    const availableScrollHeight = getScrollHeight(body)
-
-                    window.scrollBy(0, step)
-                    count += step
-
-                    if (count >= availableScrollHeight) {
-                        clearInterval(intervalId)
-                        resolve(count)
-                    }
-                }, delay)
-            })
-
-            return position
-        },
-        scrollStep,
-        scrollDelay
-    )
-    return lastPosition
-}
-
-async function bulkNE(page) {
-
-}
 
 (async () => {
     while (true) {
 
         const browser = await chromium.launch({
             headless: true
-        });
+        })
         const device_name = device_names[Math.floor(Math.random() * device_names.length)]
         const context = await browser.newContext({
             ...devices[device_name],
-        });
-        const page = await context.newPage();
-        var url = urls[Math.floor(Math.random() * urls.length)];
+        })
+        const page = await context.newPage()
+        var url = urls[Math.floor(Math.random() * urls.length)]
         var res
 
         try {
@@ -261,9 +225,9 @@ async function bulkNE(page) {
         } catch (e) {
             console.log(`Error with ${url}: ${e}`)
         }
-        await page.close();
-        await context.close();
-        await browser.close();
+        await page.close()
+        await context.close()
+        await browser.close()
     }
     hook.destroy()
-})();
+})()
