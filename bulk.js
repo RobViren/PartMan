@@ -2,7 +2,7 @@ const { chromium, devices } = require('playwright')
 const Discord = require('discord.js')
 const hook = new Discord.WebhookClient('798215273566961684', '74HAO5JM_-iemuP3V9qOm0KA7ZexM_fVL0UY-kWK-oQFF-oC-NT2Cv0T56RK8jtSaW1a') //partwatch
 const fs = require('fs')
-fs.writeFileSync('out.txt', "TimeStamp,URL\n")
+fs.writeFileSync('out.csv', "TimeStamp,URL\n")
 const device_names = [
     "Nexus 5",
     "Nexus 5X",
@@ -292,7 +292,7 @@ function updateParts(res) {
 
         res.forEach(part => {
             if (part.status) {
-                fs.appendFileSync('out.txt', `${new Date()},${part.url}\n`)
+                fs.appendFileSync('out.csv', `${new Date()},${part.url}\n`)
             }
         })
 
