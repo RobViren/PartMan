@@ -19,7 +19,7 @@ Right now the project is limited to scraping on the following websites:
 2. Install nodejs dependencies ``` npm i ```
 3. Copy and paste your Discord webhook into the **discord.txt** file replacing the current one
 4. Edit the **urls.json** file to customize your search
-5. Run the bot with ``` npm run ```
+5. Run the bot with ``` npm run start```
 
 ## Customizing your search
 
