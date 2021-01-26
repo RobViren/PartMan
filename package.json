@@ -1,6 +1,22 @@
 {
+  "name": "dpart",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "run": "node index.js"
+  },
+  "author": "",
+  "license": "ISC",
   "dependencies": {
     "discord.js": "^12.5.1",
-    "playwright": "^1.7.1"
-  }
+    "playwright-core": "^1.8.0"
+  },
+  "pkg": {
+    "targets": [
+      "node14"
+    ]
+  },
+  "bin": "index.js"
 }
