@@ -25,7 +25,7 @@ Right now the project is limited to scraping on the following websites:
 
 Editing the urls.json file changes what parts the bot is looking for. It is as simple as going to the relevant site (Best Buy, NewEgg, Microcenter) and performing a search. Here is an example for a search for an rtx 3080 within a price range at newegg.
 
-![](images\screen.png)
+![](https://raw.githubusercontent.com/RobViren/PartMan/master/images/screen.png)
 
 Copy the URL in your browser and paste that into the urls.json file. This search created this URL https://www.newegg.com/p/pl?d=rtx+3080&N=4023 .Ensure you use proper quotes and commas or the program will not work. 
 
