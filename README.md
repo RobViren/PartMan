@@ -11,13 +11,13 @@ Right now the project is limited to scraping on the following websites:
 
 ### Requirements
 
-* Nodejs 14+
+* [Nodejs 14+](https://nodejs.org/en/download/)
 * A Chromium based browser (New Microsoft Edge or Chrome)
 * A [Discord Webhook](https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks)
 
 1. Clone the repository  ``` git clone https://github.com/RobViren/PartMan.git```  or download the source
 2. Install nodejs dependencies ``` npm i ```
-3. Copy and paste your Discord webhook into the **discord.txt** file replacing the current one
+3. Copy and paste your [Discord webhook](https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks) into the **discord.txt** file replacing the current one
 4. Edit the **urls.json** file to customize your search
 5. Run the bot with ``` npm run start```
 
@@ -37,6 +37,6 @@ This does not mine crypto in the background, leak personal information, or assis
 
 ## Any Downsides?
 
-The websites could make breaking changes at any moment. They could decide to rate limit or **block IP addresses**, so use at your own discretion. By releasing this I am opening up everyone doing this, but I may as well level the playing field. 
+The websites could make breaking changes at any moment. They could decide to rate limit or **block IP addresses**, so use at your own discretion. By releasing this I am opening up everyone doing this, but It may as well level the playing field. 
 
 MIT LICENSE
